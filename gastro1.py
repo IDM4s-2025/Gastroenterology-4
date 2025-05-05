@@ -1,45 +1,39 @@
 from experta import KnowledgeEngine, Fact, Rule, DefFacts
-
 symptoms = ['heartburn', 'regurgitation', 'dysphagia', 'upper_abdominal_pain',
     'nausea', 'vomiting', 'diarrhea', 'constipation', 'blood_in_stool',
     'weight_loss', 'jaundice', 'abdominal_distension', 'fever', 'fatigue']
 
-def user_symptoms(possible_symptoms):
-    print("Enter your symptoms one at a time. When finished, type 'done'.")
-    print("Valid symptoms:")
-    for symptom in possible_symptoms:
-        print("- " + symptom)
-    confirmed = set()
+def user_symptoms(symptom_list):
+    print("Enter your symptoms (type 'done' to finish)")
+    print("Valid symptoms:", ', '.join(symptom_list), '.')
+    symptoms = set()
     while True:
-        user = input("Symptom: ").strip().lower()
+        user = input("Symptom: ").lower()
         if user == "done":
             break
-        if user in possible_symptoms:
-            confirmed.add(user)
+        if user in symptom_list:
+            symptoms.add(user)
         else:
-            print("Invalid symptom, choose from the list.")
-    return confirmed
+            print("Invalid symptom.")
+    return symptoms
 
 def new_diagnosis():
-    answer = input("Start new diagnosis? (yes/no): ").strip().lower()
-    return answer in ("yes", "y")
+    return input("Start new diagnosis? (yes/no): ").lower() in ["yes", "y"]
 
 class GastroEngine(KnowledgeEngine):
-    def __init__(self):
-        super().__init__()
-        self.diagnosed = False 
+    diagnosed = False 
 
     @DefFacts()
     def _initial_action(self):
         yield Fact(possible_symptoms=symptoms)
 
     def _set_diagnosed(self):
-        self.diagnosed = True
+        GastroEngine.diagnosed = True  
 
     @Rule(Fact(symptom='heartburn'), Fact(symptom='regurgitation'))
     def diagnose_gerd(self):
         self._set_diagnosed()
-        print("Diagnosis: Gastroesophageal Reflux Disease (GERD)")
+        print("Diagnosis: Gastroesophageal Reflux Disease")
 
     @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='nausea'), Fact(symptom='vomiting'))
     def diagnose_gastritis(self):
@@ -98,14 +92,15 @@ class GastroEngine(KnowledgeEngine):
 
     @Rule(Fact(possible_symptoms=symptoms))
     def no_diagnosis(self):
-        if not self.diagnosed:
+        if not GastroEngine.diagnosed:
             print("No diagnosis could be made based on the given symptoms.")
 
 def main():
     print("Welcome to the Gastroenterology Diagnostic Expert System!")
     while True:
-        engine = GastroEngine() 
+        engine = GastroEngine()
         engine.reset()
+        GastroEngine.diagnosed = False 
         syms = user_symptoms(symptoms)
         for s in syms:
             engine.declare(Fact(symptom=s))
