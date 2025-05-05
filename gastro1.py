@@ -4,15 +4,15 @@ symptoms = ['heartburn', 'regurgitation', 'dysphagia', 'upper_abdominal_pain',
     'weight_loss', 'jaundice', 'abdominal_distension', 'fever', 'fatigue']
 
 def user_symptoms(symptom_list):
-    print("Enter your symptoms (type 'done' to finish)")
+    print("Enter your symptoms one by one(type 'done' to finish)")
     print("Valid symptoms:", ', '.join(symptom_list), '.')
     symptoms = set()
     while True:
         user = input("Symptom: ").lower()
-        if user == "done":
-            break
         if user in symptom_list:
             symptoms.add(user)
+        if user == "done":
+            break
         else:
             print("Invalid symptom")
     return symptoms
@@ -100,12 +100,11 @@ def main():
     while True:
         engine = GastroEngine()
         engine.reset()
-        GastroEngine.diagnosed = False 
         syms = user_symptoms(symptoms)
         for s in syms:
             engine.declare(Fact(symptom=s))
         engine.run()
         if not new_diagnosis():
-            print("Thank you for using the system. Goodbye!")
+            print("Goodbye!")
             break
 main()
