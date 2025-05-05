@@ -48,70 +48,70 @@ class diagnosis(KnowledgeEngine):
         """If the user has nausea, bloated stomach, abdominal pain, diharrea and gurgling stomach,
         the user is diagnosed with lactose intolerance.
         """
-        print("\nDiagnóstico: Tienes Lactose intolerance (e4)")
+        print("\nDiagnostic: you have Lactose intolerance")
 
     @Rule(Symptom(A=True, B=True, E=True, D=True, H=False))
     def diverticular_disease(self):
         """If the user has nausea, bloated stomach, abdominal pain, diharrea and no gurgling stomach,
         the user is diagnosed with diverticular disease.
         """
-        print("\nDiagnóstico: Tienes Diverticular disease (e3)")
+        print("\nDiagnostic: you have Diverticular disease")
 
     @Rule(Symptom(A=True, B=True, E=True, D=False))
     def colon_cancer(self):
         """If the user has nausea, bloated stomach, abdominal pain and no diharrea,
         the user is diagnosed with colon cancer.
         """
-        print("\nDiagnóstico: Tienes Colon cancer (e5)")
+        print("\nDiagnostic: you have Colon cancer")
 
     @Rule(Symptom(A=True, B=True, E=False, H=False))
     def gastritis(self):
         """If the user has nausea, bloated stomach and no abdominal pain and no gurgling stomach,
         the user is diagnosed with gastritis.
         """
-        print("\nDiagnóstico: Tienes Gastritis (e9)")
+        print("\nDiagnostic: you have Gastritis")
 
     @Rule(Symptom(A=True, B=True, E=False, H=True, P=True))
     def ibs_e2(self):
         """If the user has nausea, bloated stomach, no abdominal pain, gurgling stomach and acid reflux,
         the user is diagnosed with irritable bowel syndrome.
         """
-        print("\nDiagnóstico: Tienes Irritable bowel syndrome (e2)")
+        print("\nDiagnostic: you have Irritable bowel syndrome")
 
     @Rule(Symptom(A=True, B=True, E=False, H=True, P=False))
     def constipation(self):
         """If the user has nausea, bloated stomach, no abdominal pain, gurgling stomach and no acid reflux,
         the user is diagnosed with constipation.
         """
-        print("\nDiagnóstico: Tienes Constipation (e7)")
+        print("\nDiagnostic: you have Constipation")
 
     @Rule(Symptom(A=False, B=True))
     def ibs_e1(self):
         """If the user has no nausea, bloated stomach,
         the user is diagnosed with irritable bowel syndrome.
         """
-        print("\nDiagnóstico: Tienes IBS (e1)")
+        print("\nDiagnostic: you have IBS")
 
     @Rule(Symptom(A=True, B=False, G=True))
     def barretts(self):
         """If the user has nausea, no bloated stomach and chest pain,
         the user is diagnosed with Barrett's esophagus.
         """
-        print("\nDiagnóstico: Tienes Barrett’s (e10)")
+        print("\nDiagnostic: you have Barrett's ")
 
     @Rule(Symptom(A=True, B=False, G=False))
     def gastroenteritis(self):
         """If the user has nausea, no bloated stomach and no chest pain,
         the user is diagnosed with gastroenteritis.
         """
-        print("\nDiagnóstico: Tienes Gastroenteritis (e6)")
+        print("\nDiagnostic: you have Gastroenteritis")
 
     @Rule(Symptom(A=False, B=False))
     def hemorroides(self):
         """If the user has no nausea and no bloated stomach,
         the user is diagnosed with hemorroides.
         """
-        print("\nDiagnóstico: Tienes Hemorroides (e8)")
+        print("\nDiagnostic: you have Hemorroides")
 
 questions = diagnosis() # Create an instance of the diagnosis class
 while True: # Start the loop to ask the user for input in case of wanting to do another diagnosis or an error
