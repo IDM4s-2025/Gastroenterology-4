@@ -1,110 +1,80 @@
-from experta import KnowledgeEngine, Fact, Rule, DefFacts
-symptoms = ['heartburn', 'regurgitation', 'dysphagia', 'upper_abdominal_pain',
-    'nausea', 'vomiting', 'diarrhea', 'constipation', 'blood_in_stool',
-    'weight_loss', 'jaundice', 'abdominal_distension', 'fever', 'fatigue']
+from experta import *
 
-def user_symptoms(symptom_list):
-    print("Enter your symptoms one by one(type 'done' to finish)")
-    print("Valid symptoms:", ', '.join(symptom_list), '.')
-    symptoms = set()
-    while True:
-        user = input("Symptom: ").lower()
-        if user in symptom_list:
-            symptoms.add(user)
-        if user == "done":
-            break
-        else:
-            print("Invalid symptom")
-    return symptoms
-
-def new_diagnosis():
-    return input("Start new diagnosis? (yes/no): ").lower() in ["yes", "y"]
-
-class GastroEngine(KnowledgeEngine):
-    diagnosed = False 
+class Symptom(Fact):
+    """Info about the symptoms."""
+    pass
+class diagnosis(KnowledgeEngine):
 
     @DefFacts()
     def _initial_action(self):
-        yield Fact(possible_symptoms=symptoms)
+        print("Welcome to the medical diagnosis system.")
+        print("Please answer the following questions with 'y' for yes, or 'n' for no, no other input is available.")
+        symptom = {}
+        symptom['A']= input("Do you have a nausea? (y/n): ").strip().lower()== 'y'
+        symptom['B']= input("Do you have a bloated stomach? (y/n: ").strip().lower() == 'y'
+        if symptom['A'] and symptom['B']:
+            symptom['E']= input("Do you have abdominal pain? (y/n): ").strip().lower()== 'y'
+            if symptom['E']:
+                symptom['D']= input("Do you have a diharrea? (y/n): ").strip().lower()== 'y'
+                if symptom['D']:
+                    symptom['H']= input("Do you have a gurgling stomach? (y/n): ").strip().lower()== 'y'
+                else:
+                    symptom['H']= False
+            else:
+                symptom['H']=input("Do you have a gurgling stomach? (y/n): ").strip().lower()== 'y'
+                if symptom['H']:
+                    symptom['P']= input("Do you have acid reflux? (y/n): ").strip().lower()== 'y'
+                else:
+                    symptom['P']= False
+        elif symptom['A'] and not symptom['B']:
+            symptom['G']= input("Do you have chest pain? (y/n): ").strip().lower()== 'y'
 
-    def _set_diagnosed(self):
-        GastroEngine.diagnosed = True  
+        yield Symptom(**symptom)
+    
+    @Rule(Symptom(A=True, B=True, E=True, D=True, H=True))
+    def lactose_intolerance(self):
+        print("\nDiagnóstico: Tienes Lactose intolerance (e4)")
 
-    @Rule(Fact(symptom='heartburn'), Fact(symptom='regurgitation'))
-    def diagnose_gerd(self):
-        self._set_diagnosed()
-        print("Diagnosis: Gastroesophageal Reflux Disease")
+    @Rule(Symptom(A=True, B=True, E=True, D=True, H=False))
+    def diverticular_disease(self):
+        print("\nDiagnóstico: Tienes Diverticular disease (e3)")
 
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='nausea'), Fact(symptom='vomiting'))
-    def diagnose_gastritis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Gastritis")
+    @Rule(Symptom(A=True, B=True, E=True, D=False))
+    def colon_cancer(self):
+        print("\nDiagnóstico: Tienes Colon cancer (e5)")
 
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='weight_loss'), Fact(symptom='blood_in_stool'))
-    def diagnose_peptic_ulcer(self):
-        self._set_diagnosed()
-        print("Diagnosis: Peptic Ulcer Disease")
+    @Rule(Symptom(A=True, B=True, E=False, H=False))
+    def gastritis(self):
+        print("\nDiagnóstico: Tienes Gastritis (e9)")
 
-    @Rule(Fact(symptom='diarrhea'), Fact(symptom='abdominal_distension'), Fact(symptom='weight_loss'))
-    def diagnose_crohns(self):
-        self._set_diagnosed()
-        print("Diagnosis: Crohn’s Disease")
+    @Rule(Symptom(A=True, B=True, E=False, H=True, P=True))
+    def ibs_e2(self):
+        print("\nDiagnóstico: Tienes Irritable bowel syndrome (e2)")
 
-    @Rule(Fact(symptom='diarrhea'), Fact(symptom='blood_in_stool'))
-    def diagnose_ulcerative_colitis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Ulcerative Colitis")
+    @Rule(Symptom(A=True, B=True, E=False, H=True, P=False))
+    def constipation(self):
+        print("\nDiagnóstico: Tienes Constipation (e7)")
 
-    @Rule(Fact(symptom='constipation'), Fact(symptom='abdominal_distension'), Fact(symptom='blood_in_stool'))
-    def diagnose_colon_cancer(self):
-        self._set_diagnosed()
-        print("Diagnosis: Colon Cancer")
+    @Rule(Symptom(A=False, B=True))
+    def ibs_e1(self):
+        print("\nDiagnóstico: Tienes IBS (e1)")
 
-    @Rule(Fact(symptom='jaundice'), Fact(symptom='fatigue'), Fact(symptom='abdominal_distension'))
-    def diagnose_hepatitis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Hepatitis")
+    @Rule(Symptom(A=True, B=False, G=True))
+    def barretts(self):
+        print("\nDiagnóstico: Tienes Barrett’s (e10)")
 
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='nausea'), Fact(symptom='fever'))
-    def diagnose_pancreatitis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Pancreatitis")
+    @Rule(Symptom(A=True, B=False, G=False))
+    def gastroenteritis(self):
+        print("\nDiagnóstico: Tienes Gastroenteritis (e6)")
 
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='fatigue'), Fact(symptom='nausea'))
-    def diagnose_celiac(self):
-        self._set_diagnosed()
-        print("Diagnosis: Celiac Disease")
+    @Rule(Symptom(A=False, B=False))
+    def hemorroides(self):
+        print("\nDiagnóstico: Tienes Hemorroides (e8)")
 
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='fever'), Fact(symptom='vomiting'))
-    def diagnose_diverticulitis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Diverticulitis")
-
-    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='regurgitation'), Fact(symptom='dysphagia'))
-    def diagnose_esophagitis(self):
-        self._set_diagnosed()
-        print("Diagnosis: Esophagitis")
-
-    @Rule(Fact(symptom='fatigue'), Fact(symptom='weight_loss'), Fact(symptom='diarrhea'))
-    def diagnose_ibs(self):
-        self._set_diagnosed()
-        print("Diagnosis: Irritable Bowel Syndrome (IBS)")
-
-    @Rule(Fact(possible_symptoms=symptoms))
-    def no_diagnosis(self):
-        if not GastroEngine.diagnosed:
-            print("No diagnosis could be made based on the given symptoms.")
-
-def main():
-    print("Welcome to the Gastroenterology Diagnostic Expert System!")
-    while True:
-        engine = GastroEngine()
-        engine.reset()
-        syms = user_symptoms(symptoms)
-        for s in syms:
-            engine.declare(Fact(symptom=s))
-        engine.run()
-        if not new_diagnosis():
-            print("Goodbye!")
-            break
-main()
+questions = diagnosis()
+while True:
+    questions.reset() 
+    questions.run()
+    again = input("Do you want to do another diagnosis? (y/n): ").strip().lower()
+    if again != 'y':
+        break  
