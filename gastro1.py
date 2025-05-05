@@ -1,49 +1,46 @@
 from experta import KnowledgeEngine, Fact, Rule, DefFacts
-import sys
 
-POSSIBLE_SYMPTOMS = [
+symptoms = [
     'heartburn', 'regurgitation', 'dysphagia', 'upper_abdominal_pain',
     'nausea', 'vomiting', 'diarrhea', 'constipation', 'blood_in_stool',
     'weight_loss', 'jaundice', 'abdominal_distension', 'fever', 'fatigue'
 ]
 
-def get_user_symptoms(possible_symptoms):
-    print("Enter your symptoms one at a time. When finished, type 'done'.", flush=True)
-    print(f"Valid symptoms: {', '.join(possible_symptoms)}", flush=True)
+def user_symptoms(possible_symptoms):
+    print("Enter your symptoms one at a time. When finished, type 'done'.")
+    print(f"Valid symptoms: {', '.join(possible_symptoms)}")
     confirmed = set()
     while True:
-        print("Symptom: ", end='', flush=True)
-        s = sys.stdin.readline().strip().lower()
+        s = input("Symptom: ").strip().lower()
         if s == "done":
             break
         if s in possible_symptoms:
             confirmed.add(s)
         else:
-            print("  → Invalid symptom, choose from the list.", flush=True)
+            print("  → Invalid symptom, choose from the list.")
     return confirmed
 
 def new_diagnosis():
-    print("\nStart new diagnosis? (yes/no): ", end='', flush=True)
-    ans = sys.stdin.readline().strip().lower()
+    ans = input("\nStart new diagnosis? (yes/no): ").strip().lower()
     return ans in ("yes", "y")
 
 def main():
-    print("Welcome to the Gastroenterology Diagnostic Expert System!", flush=True)
+    print("Welcome to the Gastroenterology Diagnostic Expert System!")
     engine = GastroEngine()
     while True:
         engine.reset()
-        syms = get_user_symptoms(POSSIBLE_SYMPTOMS)
+        syms = user_symptoms(symptoms)
         for s in syms:
             engine.declare(Fact(symptom=s))
         engine.run()
         if not new_diagnosis():
-            print("Thank you for using the system. Goodbye!", flush=True)
+            print("Thank you for using the system. Goodbye!")
             break
 
 class GastroEngine(KnowledgeEngine):
     @DefFacts()
     def _initial_action(self):
-        yield Fact(possible_symptoms=POSSIBLE_SYMPTOMS)
+        yield Fact(possible_symptoms=symptoms)
 
     @Rule(Fact(symptom='heartburn'), Fact(symptom='regurgitation'))
     def diagnose_gerd(self):
@@ -92,5 +89,5 @@ class GastroEngine(KnowledgeEngine):
     @Rule(Fact(symptom='fatigue'), Fact(symptom='weight_loss'), Fact(symptom='diarrhea'))
     def diagnose_ibs(self):
         print("\nDiagnosis: Irritable Bowel Syndrome (IBS)")
-        
+
 main()
