@@ -1,115 +1,120 @@
-import csv
-from experta import KnowledgeEngine, Fact, Rule, FIELD
+from experta import KnowledgeEngine, Fact, Rule, DefFacts
 
-def load_symptoms(csv_path):
-    diseases = {}
-    with open(csv_path, newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            disease = row['disease']
-            symptoms = [s.strip() for s in row['symptoms'].split(',')]
-            diseases[disease] = symptoms
-    return diseases
+# Lista global de síntomas permitidos
+POSSIBLE_SYMPTOMS = [
+    'heartburn', 'regurgitation', 'dysphagia', 'upper_abdominal_pain',
+    'nausea', 'vomiting', 'diarrhea', 'constipation', 'blood_in_stool',
+    'weight_loss', 'jaundice', 'abdominal_distension', 'fever', 'fatigue'
+]
 
-class GastroExpert(KnowledgeEngine):
-    def __init__(self, disease_symptoms):
-        super().__init__()
-        self.disease_symptoms = disease_symptoms
-        self.user_symptoms = set()
+def get_user_symptoms(possible_symptoms):
+    """
+    Prompt the user to enter symptoms one at a time. Validate input and return a set of confirmed symptoms.
+    """
+    print("Enter your symptoms one at a time. When finished, type 'done'.", flush=True)
+    print(f"Valid symptoms: {', '.join(possible_symptoms)}\n", flush=True)
+    confirmed = set()
+    while True:
+        s = input("Symptom: ").strip().lower()
+        if s == "done":
+            break
+        if s in possible_symptoms:
+            confirmed.add(s)
+        else:
+            print("  → Invalid symptom, choose from the list.", flush=True)
+    return confirmed
 
-    def ask(self, symptom):
-        answer = ''
-        while answer.lower() not in ('y', 'n'):
-            answer = input(f"Do you experience {symptom.replace('_', ' ')}? (y/n): ")
-        if answer.lower() == 'y':
-            self.declare(Fact(symptom=symptom))
-            self.user_symptoms.add(symptom)
+def new_diagnosis():
+    """
+    Ask user if they wish to start a new diagnosis. Returns True if yes.
+    """
+    ans = input("\nStart new diagnosis? (yes/no): ").strip().lower()
+    return ans in ("yes", "y")
 
-    def reset(self):
-        super().reset()
-        self.user_symptoms.clear()
+def main():
+    """
+    Main loop: welcome user, run expert engine, display result(s), allow restart.
+    """
+    print("Welcome to the Gastroenterology Diagnostic Expert System!", flush=True)
+    engine = GastroEngine()
+    while True:
+        engine.reset()
+        syms = get_user_symptoms(POSSIBLE_SYMPTOMS)
+        for s in syms:
+            engine.declare(Fact(symptom=s))
+        engine.run()
+        if not new_diagnosis():
+            print("Thank you for using the system. Goodbye!", flush=True)
+            break
 
-    @Rule(Fact(symptom=MATCH.s1), Fact(symptom=MATCH.s2))
-    def rule_template(self, s1, s2):
-        pass
+class GastroEngine(KnowledgeEngine):
+    """
+    The Experta engine: defines initial facts and 12 diagnosis rules.
+    """
+    @DefFacts()
+    def _initial_action(self):
+        # Provide possible symptoms fact (not used for logic, only reference)
+        yield Fact(possible_symptoms=POSSIBLE_SYMPTOMS)
 
     @Rule(Fact(symptom='heartburn'), Fact(symptom='regurgitation'))
     def diagnose_gerd(self):
-        print("Diagnosis: Gastroesophageal Reflux Disease (GERD)")
-        self.halt()
+        """GERD: heartburn & regurgitation"""
+        print("\nDiagnosis: Gastroesophageal Reflux Disease (GERD)")
 
-    @Rule(Fact(symptom='abdominal_pain'), Fact(symptom='bloating'), Fact(symptom='altered_bowel_habits'))
-    def diagnose_ibs(self):
-        print("Diagnosis: Irritable Bowel Syndrome (IBS)")
-        self.halt()
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='nausea'), Fact(symptom='vomiting'))
+    def diagnose_gastritis(self):
+        """Gastritis: epigastric pain, nausea, vomiting"""
+        print("\nDiagnosis: Gastritis")
 
-    @Rule(Fact(symptom='chronic_diarrhea'), Fact(symptom='weight_loss'), Fact(symptom='ulcers_on_colonoscopy'))
-    def diagnose_crohns(self):
-        print("Diagnosis: Crohn's Disease")
-        self.halt()
-
-    @Rule(Fact(symptom='bloody_diarrhea'), Fact(symptom='cramping'), Fact(symptom='mucus_in_stools'))
-    def diagnose_uc(self):
-       
-        print("Diagnosis: Ulcerative Colitis")
-        self.halt()
-
-    @Rule(Fact(symptom='epigastric_pain'), Fact(symptom='ulcer_on_endoscopy'))
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='weight_loss'), Fact(symptom='blood_in_stool'))
     def diagnose_peptic_ulcer(self):
-      
-        print("Diagnosis: Peptic Ulcer Disease")
-        self.halt()
+        """Peptic ulcer: epigastric pain, weight loss, GI bleeding"""
+        print("\nDiagnosis: Peptic Ulcer Disease")
 
-    @Rule(Fact(symptom='jaundice'), Fact(symptom='right_upper_quadrant_pain'))
+    @Rule(Fact(symptom='diarrhea'), Fact(symptom='abdominal_distension'), Fact(symptom='weight_loss'))
+    def diagnose_crohns(self):
+        """Crohn’s disease: diarrhea, distension, weight loss"""
+        print("\nDiagnosis: Crohn’s Disease")
+
+    @Rule(Fact(symptom='diarrhea'), Fact(symptom='blood_in_stool'))
+    def diagnose_ulcerative_colitis(self):
+        """Ulcerative colitis: bloody diarrhea"""
+        print("\nDiagnosis: Ulcerative Colitis")
+
+    @Rule(Fact(symptom='constipation'), Fact(symptom='abdominal_distension'), Fact(symptom='blood_in_stool'))
+    def diagnose_colon_cancer(self):
+        """Colon cancer: change in bowel habits, bleeding"""
+        print("\nDiagnosis: Colon Cancer")
+
+    @Rule(Fact(symptom='jaundice'), Fact(symptom='fatigue'), Fact(symptom='abdominal_distension'))
     def diagnose_hepatitis(self):
-        
-        print("Diagnosis: Hepatitis")
-        self.halt()
+        """Hepatitis: jaundice, fatigue, distension"""
+        print("\nDiagnosis: Hepatitis")
 
-    @Rule(Fact(symptom='severe_abdominal_pain'), Fact(symptom='high_amylase'))
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='nausea'), Fact(symptom='fever'))
     def diagnose_pancreatitis(self):
-        print("Diagnosis: Acute Pancreatitis")
-        self.halt()
+        """Pancreatitis: epigastric pain, nausea, fever"""
+        print("\nDiagnosis: Pancreatitis")
 
-    @Rule(Fact(symptom='diarrhea'), Fact(symptom='post_prandial_bloating'))
-    def diagnose_lactose_intolerance(self):
-        print("Diagnosis: Lactose Intolerance")
-        self.halt()
-
-    @Rule(Fact(symptom='gluten_sensitivity'), Fact(symptom='villous_atrophy_on_biopsy'))
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='fatigue'), Fact(symptom='nausea'))
     def diagnose_celiac(self):
-        print("Diagnosis: Celiac Disease")
-        self.halt()
+        """Celiac disease: dyspepsia, fatigue, nausea"""
+        print("\nDiagnosis: Celiac Disease")
 
-    @Rule(Fact(symptom='right_lower_quadrant_pain'), Fact(symptom='fever'))
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='fever'), Fact(symptom='vomiting'))
     def diagnose_diverticulitis(self):
-        print("Diagnosis: Diverticulitis")
-        self.halt()
+        """Diverticulitis: pain, fever, vomiting"""
+        print("\nDiagnosis: Diverticulitis")
 
-    @Rule(Fact(symptom='nausea'), Fact(symptom='vomiting'), Fact(symptom='diarrhea'), Fact(symptom='recent_travel'))
-    def diagnose_gastroenteritis(self):
-        print("Diagnosis: Gastroenteritis")
-        self.halt()
+    @Rule(Fact(symptom='upper_abdominal_pain'), Fact(symptom='regurgitation'), Fact(symptom='dysphagia'))
+    def diagnose_esophagitis(self):
+        """Esophagitis: dysphagia & heartburn"""
+        print("\nDiagnosis: Esophagitis")
 
-    @Rule()
-    def no_diagnosis(self):
-        print("No clear diagnosis. Please consult a specialist.")
-        self.halt()
+    @Rule(Fact(symptom='fatigue'), Fact(symptom='weight_loss'), Fact(symptom='diarrhea'))
+    def diagnose_ibs(self):
+        """Irritable Bowel Syndrome: fatigue, weight change, diarrhea"""
+        print("\nDiagnosis: Irritable Bowel Syndrome (IBS)")
 
-if __name__ == '__main__':
-    print("Welcome to the Gastroenterology Diagnostic Expert System!")
-    print("Please answer the following questions to help diagnose your condition.")
-    diseases = load_symptoms('Symptoms.csv')  # ensure CSV in same directory
-    engine = GastroExpert(diseases)
-    while True:
-        # Ask about all possible symptoms
-        for symptom_list in diseases.values():
-            for symptom in symptom_list:
-                if symptom not in engine.user_symptoms:
-                    engine.ask(symptom)
-        engine.run()
-        again = input("\nWould you like to start a new diagnosis? (y/n): ")
-        if again.lower() != 'y':
-            print("Thank you for using the system. Goodbye!")
-            break
-        
+if __name__ == "__main__":
+    main()
