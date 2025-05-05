@@ -14,7 +14,7 @@ def user_symptoms(symptom_list):
         if user in symptom_list:
             symptoms.add(user)
         else:
-            print("Invalid symptom.")
+            print("Invalid symptom")
     return symptoms
 
 def new_diagnosis():
