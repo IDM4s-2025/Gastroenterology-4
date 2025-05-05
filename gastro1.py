@@ -8,9 +8,6 @@ POSSIBLE_SYMPTOMS = [
 ]
 
 def get_user_symptoms(possible_symptoms):
-    """
-    Prompt the user to enter symptoms one at a time. Validate input and return a set of confirmed symptoms.
-    """
     print("Enter your symptoms one at a time. When finished, type 'done'.", flush=True)
     print(f"Valid symptoms: {', '.join(possible_symptoms)}\n", flush=True)
     confirmed = set()
@@ -25,16 +22,10 @@ def get_user_symptoms(possible_symptoms):
     return confirmed
 
 def new_diagnosis():
-    """
-    Ask user if they wish to start a new diagnosis. Returns True if yes.
-    """
     ans = input("\nStart new diagnosis? (yes/no): ").strip().lower()
     return ans in ("yes", "y")
 
 def main():
-    """
-    Main loop: welcome user, run expert engine, display result(s), allow restart.
-    """
     print("Welcome to the Gastroenterology Diagnostic Expert System!", flush=True)
     engine = GastroEngine()
     while True:
@@ -48,9 +39,6 @@ def main():
             break
 
 class GastroEngine(KnowledgeEngine):
-    """
-    The Experta engine: defines initial facts and 12 diagnosis rules.
-    """
     @DefFacts()
     def _initial_action(self):
         # Provide possible symptoms fact (not used for logic, only reference)
